@@ -1,6 +1,6 @@
 {
   "name": "@andrewpopov/feature-flags-kit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Framework- and DB-agnostic feature flags: a pure store -> environment -> default evaluator, typed registry, sync and async front ends with last-known-good degradation, and thin SQL/JSON-blob store adapters.",
   "author": "Andrew Popov",
   "license": "MIT",
@@ -24,7 +24,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify:pack": "node scripts/verify-pack.mjs"
+    "verify:pack": "node scripts/verify-pack.mjs",
+    "verify": "npm run typecheck && npm test && npm run build && npm run verify:pack"
   },
   "dependencies": {},
   "devDependencies": {

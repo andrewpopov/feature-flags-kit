@@ -19,6 +19,12 @@ Both the env-key mapping and the boolean parser (`'1'|'true'|'yes'|'on'` /
 `'0'|'false'|'no'|'off'`, case-insensitive) are overridable via `envKey` /
 `parseBool` options.
 
+`defineFlags` rejects registry keys that normalize to the same environment
+variable (for example `new.checkout`, `new-checkout`, and `newCheckout` all
+become `FEATURE_NEW_CHECKOUT`). This prevents one deployment setting from
+silently controlling multiple flags. A shared variable is permitted only by
+explicitly listing it in `allowEnvKeyAliases`.
+
 ## The kill-switch: `onStoreError`
 
 If the store's `load()` **throws** (not merely "row missing" — a genuine
@@ -81,7 +87,7 @@ must never clobber an existing value.
 ## Install
 
 ```
-npm install github:andrewpopov/feature-flags-kit#v0.1.0
+npm install github:andrewpopov/feature-flags-kit#v0.1.1
 ```
 
 ## Use: sano-os-style, sync + SQL
@@ -150,7 +156,7 @@ if (snapshot.isEnabled('cloud_storage_v2')) {
 
 | Export | Purpose |
 |---|---|
-| `defineFlags(defs)` | Build a typed registry; an unknown key elsewhere is a compile error. Throws on a duplicate key. |
+| `defineFlags(defs, options?)` | Build a typed registry; rejects duplicate keys and normalized environment-key collisions unless explicitly aliased. |
 | `evaluateFlags(registry, stored, env, options?)` | Pure store -> environment -> default evaluator. No I/O, never throws. |
 | `createSyncFlags(registry, store, options?)` | Live per-call `SyncFlags` front end. |
 | `createAsyncFlags(registry, store, options?)` | Cached `AsyncFlags` front end with last-known-good. |
@@ -170,6 +176,14 @@ a consumer implements. Neither adapter imports its backing driver package —
 `sql` takes a structurally-typed `SqlDriver`, `blob` takes a structurally-
 typed `BlobDriver` — so this package has zero runtime dependencies and never
 imports `@prisma/client` or `better-sqlite3`.
+
+## Verify locally
+
+```bash
+npm ci
+npm run verify
+npm audit --omit=dev --audit-level=high
+```
 
 ## Standards
 

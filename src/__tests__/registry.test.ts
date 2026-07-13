@@ -20,6 +20,27 @@ describe('defineFlags', () => {
       ] as const),
     ).toThrow(/duplicate/i);
   });
+
+  it('rejects keys that would silently share one normalized environment override', () => {
+    expect(() =>
+      defineFlags([
+        { key: 'new.checkout', description: 'dot', default: false },
+        { key: 'new-checkout', description: 'dash', default: false },
+      ] as const),
+    ).toThrow(/FEATURE_NEW_CHECKOUT/);
+  });
+
+  it('permits a collision only when the shared environment variable is explicitly declared as an alias', () => {
+    expect(() =>
+      defineFlags(
+        [
+          { key: 'new.checkout', description: 'dot', default: false },
+          { key: 'newCheckout', description: 'camel', default: false },
+        ] as const,
+        { allowEnvKeyAliases: ['FEATURE_NEW_CHECKOUT'] },
+      ),
+    ).not.toThrow();
+  });
 });
 
 describe('type-level: unknown key is a compile error', () => {

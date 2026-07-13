@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+- Reject duplicate normalized environment variable names at registry creation.
+  A collision is allowed only when the shared variable is explicitly listed in
+  `allowEnvKeyAliases`.
+- Add `npm run verify` for the local release gate.
+
 ## 0.1.1
 
 Fix — expose `./package.json` in the `exports` map. Without it,

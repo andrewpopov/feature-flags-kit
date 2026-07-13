@@ -17,7 +17,7 @@
  */
 export type { AsyncFlagStore, EvaluatedFlag, FlagDefinition, FlagHealth, FlagSnapshot, FlagSource, StoredFlag, SyncFlagStore, } from './types';
 export { evaluateFlags, defaultEnvKey, defaultParseBool, type EvaluateOptions } from './evaluate';
-export { defineFlags, type FlagKeys } from './registry';
+export { defineFlags, type DefineFlagsOptions, type FlagKeys } from './registry';
 export { createSyncFlags, createAsyncFlags, type AsyncFlags, type SyncFlags, type FlagsOptions, } from './flags';
 export { createSqlFlagStore, FEATURE_FLAGS_SCHEMA_SQL, type SqlDriver, type SqlFlagStoreOptions } from './adapters/sql';
 export { createBlobFlagStore, type BlobDriver } from './adapters/blob';

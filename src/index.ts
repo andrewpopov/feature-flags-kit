@@ -28,7 +28,7 @@ export type {
 } from './types';
 
 export { evaluateFlags, defaultEnvKey, defaultParseBool, type EvaluateOptions } from './evaluate';
-export { defineFlags, type FlagKeys } from './registry';
+export { defineFlags, type DefineFlagsOptions, type FlagKeys } from './registry';
 export {
   createSyncFlags,
   createAsyncFlags,
