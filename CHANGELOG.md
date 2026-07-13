@@ -2,6 +2,7 @@
 
 ## 0.1.2
 
+- Add public contribution, support, and private vulnerability-reporting policies.
 - Reject duplicate normalized environment variable names at registry creation.
   A collision is allowed only when the shared variable is explicitly listed in
   `allowEnvKeyAliases`.
