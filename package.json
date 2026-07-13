@@ -1,14 +1,24 @@
 {
   "name": "@andrewpopov/feature-flags-kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Framework- and DB-agnostic feature flags: a pure store -> environment -> default evaluator, typed registry, sync and async front ends with last-known-good degradation, and thin SQL/JSON-blob store adapters.",
   "author": "Andrew Popov",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": ["dist"],
-  "engines": { "node": ">=20" },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
