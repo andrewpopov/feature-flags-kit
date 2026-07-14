@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.2
+
+- Add public contribution, support, and private vulnerability-reporting policies.
+- Reject duplicate normalized environment variable names at registry creation.
+  A collision is allowed only when the shared variable is explicitly listed in
+  `allowEnvKeyAliases`.
+- Add `npm run verify` for the local release gate.
+- Upgrade the Vitest development toolchain to a version with no known advisories.
+
 ## 0.1.1
 
 Fix — expose `./package.json` in the `exports` map. Without it,
