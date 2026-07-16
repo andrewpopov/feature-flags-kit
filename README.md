@@ -87,7 +87,7 @@ must never clobber an existing value.
 ## Install
 
 ```
-npm install github:andrewpopov/feature-flags-kit#v0.1.1
+npm install github:andrewpopov/feature-flags-kit#v0.1.2
 ```
 
 ## Use: sano-os-style, sync + SQL
