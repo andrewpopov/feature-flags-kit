@@ -4,9 +4,16 @@
   "description": "Framework- and DB-agnostic feature flags: a pure store -> environment -> default evaluator, typed registry, sync and async front ends with last-known-good degradation, and thin SQL/JSON-blob store adapters.",
   "author": "Andrew Popov",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/andrewpopov/feature-flags-kit.git" },
+  "repository": { "type": "git", "url": "git+https://github.com/andrewpopov/feature-flags-kit.git" },
   "bugs": { "url": "https://github.com/andrewpopov/feature-flags-kit/issues" },
   "homepage": "https://github.com/andrewpopov/feature-flags-kit#readme",
+  "keywords": [
+    "feature-flags",
+    "flags",
+    "evaluator",
+    "framework-agnostic",
+    "typescript"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
