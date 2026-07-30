@@ -1,11 +1,16 @@
 {
   "name": "@andrewpopov/feature-flags-kit",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Framework- and DB-agnostic feature flags: a pure store -> environment -> default evaluator, typed registry, sync and async front ends with last-known-good degradation, and thin SQL/JSON-blob store adapters.",
   "author": "Andrew Popov",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/andrewpopov/feature-flags-kit.git" },
-  "bugs": { "url": "https://github.com/andrewpopov/feature-flags-kit/issues" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrewpopov/feature-flags-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andrewpopov/feature-flags-kit/issues"
+  },
   "homepage": "https://github.com/andrewpopov/feature-flags-kit#readme",
   "keywords": [
     "feature-flags",
