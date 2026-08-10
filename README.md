@@ -68,10 +68,16 @@ same boolean.
   `all()` — reports `'store-unavailable'` so callers can detect degradation
   without losing service. A snapshot's per-flag records never silently say
   `'ok'` while the snapshot itself is degraded.
-- Snapshots are **immutable**: `get()`/`all()` always return frozen clones,
-  never the internal records, so a caller mutating a returned flag (or
-  `loadedAt`) can neither corrupt that snapshot nor poison a later
-  last-known-good read.
+- Snapshots are **immutable**: the snapshot object returned by `snapshot()`/
+  `loadSnapshot()` is itself frozen — `health`, `loadedAt`, and the
+  `isEnabled`/`get`/`all` methods can't be added, removed, reassigned, or
+  replaced. `get()` returns a frozen clone of the flag record, and `all()`
+  returns a frozen array of frozen clones — never the internal evaluated
+  map, which is never exposed to a caller at all. A caller mutating anything
+  handed back by a snapshot can neither corrupt that snapshot nor poison a
+  later last-known-good read — which matters most for `AsyncFlags`, whose
+  `snapshot()` returns the SAME cached object across calls until the next
+  `refresh()`/`loadSnapshot()`.
 - Overlapping `refresh()`/`loadSnapshot()` calls can never roll the cache
   backwards — each carries a monotonically increasing request id, and only
   the most-recently-issued call still outstanding when it resolves is

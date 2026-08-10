@@ -180,6 +180,36 @@ describe('createSyncFlags', () => {
     const all = snap.all();
     expect(Object.isFrozen(all[0])).toBe(true);
   });
+
+  it('PKG-146 finding 1: the snapshot object itself is frozen — replacing health or a method throws', () => {
+    const store = fakeSyncStore([{ key: 'allow_signups', enabled: true }]);
+    const flags = createSyncFlags(registry, store);
+    const snap = flags.snapshot();
+    expect(Object.isFrozen(snap)).toBe(true);
+    expect(() => {
+      (snap as { health: string }).health = 'store-unavailable';
+    }).toThrow();
+    expect(() => {
+      (snap as unknown as { isEnabled: () => boolean }).isEnabled = () => false;
+    }).toThrow();
+  });
+
+  it('PKG-146 finding 2: snapshot() reports store-unavailable after a failed load even with an EMPTY registry (health must not be inferred from the evaluated map)', () => {
+    const emptyRegistry = defineFlags([] as const);
+    const store: SyncFlagStore = {
+      load: () => {
+        throw new Error('boom');
+      },
+      set: vi.fn(),
+      seedMissing: vi.fn(),
+    };
+    const flags = createSyncFlags(emptyRegistry, store);
+    const snap = flags.snapshot();
+    // An empty registry with a throwing store yields an empty evaluated map —
+    // indistinguishable from a healthy empty registry if health is inferred
+    // from the map's contents rather than tracked from load() itself.
+    expect(snap.health).toBe('store-unavailable');
+  });
 });
 
 describe('createAsyncFlags', () => {
@@ -353,5 +383,30 @@ describe('createAsyncFlags', () => {
     expect(snap.health).toBe('store-unavailable');
     expect(snap.isEnabled('new_checkout')).toBe(false); // onStoreError: 'disabled'
     expect(onStoreError).toHaveBeenCalledWith(expect.any(Error));
+  });
+
+  it('PKG-146 finding 1: mutating a returned snapshot cannot poison a later cached snapshot() read', async () => {
+    const store = fakeAsyncStore([{ key: 'allow_signups', enabled: true }]);
+    const flags = createAsyncFlags(registry, store);
+    const snap = await flags.loadSnapshot();
+    expect(snap.health).toBe('ok');
+
+    // A consumer accidentally overwrites `health` on the snapshot it was handed.
+    expect(() => {
+      (snap as { health: string }).health = 'store-unavailable';
+    }).toThrow();
+
+    // createAsyncFlags caches and returns the SAME object from snapshot()
+    // until the next refresh — an unprotected write above would corrupt
+    // what every later reader sees.
+    const later = flags.snapshot();
+    expect(later).toBe(snap);
+    expect(later?.health).toBe('ok');
+
+    // Replacing a method is rejected the same way.
+    expect(() => {
+      (snap as unknown as { isEnabled: () => boolean }).isEnabled = () => false;
+    }).toThrow();
+    expect(Object.isFrozen(snap)).toBe(true);
   });
 });

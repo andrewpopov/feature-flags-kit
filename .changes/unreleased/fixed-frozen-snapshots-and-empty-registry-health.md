@@ -1,0 +1,6 @@
+---
+kind: fixed
+summary: Snapshots are now runtime-frozen, and a throwing sync store with an empty registry now reports store-unavailable
+---
+
+A completeness audit (PKG-146) found two gaps between the README's claims and the runtime. First, `FlagSnapshot` objects returned by `snapshot()`/`loadSnapshot()` were plain mutable objects, not frozen — a consumer overwriting `health` or a method on an `AsyncFlags` snapshot mutated the SAME cached object every later `snapshot()` call returns, silently poisoning every subsequent reader. `toSnapshot()` now freezes the returned object itself in addition to the already-frozen `get()`/`all()` clones, so nothing reachable from a snapshot can be mutated. Second, `createSyncFlags().snapshot()` inferred `health` by scanning the evaluated map for a degraded per-flag record; with an empty registry, a throwing store produced an empty map that looked identical to a healthy empty registry, so `health` silently reported `'ok'` while the store was actually down. `health` is now tracked directly from whether `store.load()` succeeded, matching the `AsyncFlags` front end (which already tracked this correctly and was not affected). The README's immutability claim is also tightened to state precisely what is frozen.
