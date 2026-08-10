@@ -64,10 +64,16 @@ function freezeFlag(flag: EvaluatedFlag): EvaluatedFlag {
 }
 
 /**
- * Builds an immutable point-in-time `FlagSnapshot`. `get`/`all` always
- * return frozen clones — never the internal records — so a caller mutating
- * a returned object can neither corrupt a later snapshot nor poison
- * retained last-known-good state. `loadedAt` is stored as a number
+ * Builds an immutable point-in-time `FlagSnapshot`. The returned snapshot
+ * OBJECT ITSELF is frozen — `health`/`loadedAt`/`isEnabled`/`get`/`all`
+ * cannot be added, removed, reassigned, or replaced. `get()` returns a
+ * frozen clone and `all()` returns a frozen array of frozen clones — never
+ * the internal `map`, which is never exposed to a caller at all (it lives
+ * only in this closure). Together that means nothing reachable from a
+ * returned snapshot can be mutated, so a caller can neither corrupt a later
+ * snapshot nor poison retained last-known-good state — which matters most
+ * for `AsyncFlags`, whose `snapshot()` returns the SAME cached object across
+ * calls until the next `refresh()`. `loadedAt` is stored as a number
  * internally and exposed via a getter that mints a fresh `Date` each read.
  */
 function toSnapshot<K extends string>(
@@ -75,22 +81,16 @@ function toSnapshot<K extends string>(
   loadedAtMs: number,
   health: FlagHealth,
 ): FlagSnapshot<K> {
-  return {
+  const snapshot: FlagSnapshot<K> = {
     isEnabled: (key: K) => requireFlag(map, key).enabled,
     get: (key: K) => freezeFlag(requireFlag(map, key)),
-    all: () => Array.from(map.values(), freezeFlag),
+    all: () => Object.freeze(Array.from(map.values(), freezeFlag)) as EvaluatedFlag[],
     get loadedAt(): Date {
       return new Date(loadedAtMs);
     },
     health,
   };
-}
-
-function healthOf(map: ReadonlyMap<string, EvaluatedFlag>): FlagHealth {
-  for (const flag of map.values()) {
-    if (flag.health === 'store-unavailable') return 'store-unavailable';
-  }
-  return 'ok';
+  return Object.freeze(snapshot);
 }
 
 /**
@@ -129,7 +129,15 @@ export function createSyncFlags<K extends string>(
   const env = resolveEnv(options.env);
   const evalOptions: EvaluateOptions = { envKey: options.envKey, parseBool: options.parseBool };
 
-  function evaluate(): Map<string, EvaluatedFlag> {
+  /**
+   * `health` is tracked directly from whether `store.load()` itself
+   * succeeded — NOT inferred from the evaluated map's contents. An empty
+   * registry (or a registry whose store row happens to produce an empty
+   * map) is indistinguishable from "the store threw" if health is inferred
+   * from the map: both yield zero flags with a degraded-health signal to
+   * find. Tracking `stored === null` directly keeps that signal exact.
+   */
+  function evaluate(): { map: Map<string, EvaluatedFlag>; health: FlagHealth } {
     let stored: StoredFlag[] | null;
     try {
       stored = store.load();
@@ -137,18 +145,21 @@ export function createSyncFlags<K extends string>(
       options.onStoreError?.(err);
       stored = null;
     }
-    return evaluateFlags(registry, stored, env, evalOptions);
+    return {
+      map: evaluateFlags(registry, stored, env, evalOptions),
+      health: stored === null ? 'store-unavailable' : 'ok',
+    };
   }
 
   return {
-    isEnabled: (key) => requireFlag(evaluate(), key).enabled,
-    get: (key) => freezeFlag(requireFlag(evaluate(), key)),
-    all: () => Array.from(evaluate().values(), freezeFlag),
+    isEnabled: (key) => requireFlag(evaluate().map, key).enabled,
+    get: (key) => freezeFlag(requireFlag(evaluate().map, key)),
+    all: () => Array.from(evaluate().map.values(), freezeFlag),
     set: (key, enabled) => store.set(key, enabled),
     seed: () => store.seedMissing(seedFlags(registry)),
     snapshot: () => {
-      const map = evaluate();
-      return toSnapshot<K>(map, Date.now(), healthOf(map));
+      const { map, health } = evaluate();
+      return toSnapshot<K>(map, Date.now(), health);
     },
     refresh: () => {
       // Intentional no-op — see the `refresh` doc comment on `SyncFlags`.
