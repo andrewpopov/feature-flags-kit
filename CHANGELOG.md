@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.4
+
+- Release tooling upgraded to release-kit v0.3.1, so a feature release is graded as a minor rather than a patch
+  This package's release-kit was pinned at v0.2.0, whose `stableSemver` incremented the patch component regardless of fragment kind — measured directly, a `minor` and even a `major` bump both resolved to a patch, and `bumpLevelSupport` was absent. Any release adding public surface would therefore have been published as a patch, telling every consumer the upgrade added nothing. That was not hypothetical: during the PKG-114 cuts, alert-kit on v0.2.0 derived 0.5.1 for a release that added a whole new public module, caught only because the derived version was read before cutting.
+  
+  No runtime change — release-kit is a devDependency and nothing this package exports is affected.
+- the aggregate verification gate now rejects stale committed build output
+  The package's main verification command now includes its committed-`dist/`
+  freshness guard.
+- Snapshots are now runtime-frozen, and a throwing sync store with an empty registry now reports store-unavailable
+  A completeness audit (PKG-146) found two gaps between the README's claims and the runtime. First, `FlagSnapshot` objects returned by `snapshot()`/`loadSnapshot()` were plain mutable objects, not frozen — a consumer overwriting `health` or a method on an `AsyncFlags` snapshot mutated the SAME cached object every later `snapshot()` call returns, silently poisoning every subsequent reader. `toSnapshot()` now freezes the returned object itself in addition to the already-frozen `get()`/`all()` clones, so nothing reachable from a snapshot can be mutated. Second, `createSyncFlags().snapshot()` inferred `health` by scanning the evaluated map for a degraded per-flag record; with an empty registry, a throwing store produced an empty map that looked identical to a healthy empty registry, so `health` silently reported `'ok'` while the store was actually down. `health` is now tracked directly from whether `store.load()` succeeded, matching the `AsyncFlags` front end (which already tracked this correctly and was not affected). The README's immutability claim is also tightened to state precisely what is frozen.
+
 ## 0.1.3
 
 - Manage releases with release-kit (fragment-based CHANGELOG + version bump)
